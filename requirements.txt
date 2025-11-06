@@ -1,0 +1,6 @@
+### for making http requests 
+requests
+
+### Accessing environemnt variables
+python-dotenv
+
