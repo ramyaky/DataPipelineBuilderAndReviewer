@@ -2,6 +2,9 @@ import requests
 from dotenv import load_dotenv
 import json
 import os
+import logging
+
+logger = logging.getLogger("DataPipelineBuilder")
 
 ### Load environment variables from .env file
 load_dotenv()
@@ -9,10 +12,10 @@ load_dotenv()
 MODEL = os.getenv("MODEL")
 OLLAMA_URL = os.getenv("OLLAMA_URL")
 
-def generate_spark_job(instruction):
-    prompt = """
+def generate_spark_job(instruction: str):
+    prompt = f"""
         You are an expert data engineer. 
-        Write clean, production ready PySpark code for the following instruction:{instruction}
+        Write clean, production ready PySpark code for the following instruction:\n{instruction}
 
         Requirements:
         -- Use Spark best practices
@@ -20,26 +23,31 @@ def generate_spark_job(instruction):
         -- Do not include example data
         -- Return only valid python code
     """
-
+    logger.debug(f"User Prompt: {prompt}")
     llm_result = query_ollama(prompt, MODEL)
+    logger.debug(f"LLM Response: {llm_result}")
     return llm_result
 
-def query_ollama(prompt, model):
+def query_ollama(prompt: str, model: str = MODEL):
     payload = {"model": model, "prompt": prompt, "stream": False}
+    logger.info(f"Querying Ollama {model} model located at {OLLAMA_URL}")
+    logger.debug(f"Http POST Method with JSON Payload: {payload}")
     response = requests.post(OLLAMA_URL, json=payload)
 
     if response.status_code != 200:
         raise Exception(f"Ollama error {response.text}")
     
     try:
+        logger.debug(f"Response Status Code: {response.status_code}")
         data = response.json()
-        return data.get(response, "").strip()
+        return data.get("response", "").strip()
     
     except json.JSONDecodeError:
         ## for somereason if the response comes in line-delimited.
         ## Ollama’s /api/generate endpoint doesn’t always return a single JSON object — it streams multiple JSON chunks by default, 
         # even if you set "stream": False
 
+        logger.debug(f"Ollama endpoint returned multiple JSON chunks instead of a single JSON object")
         full_result = ""
         for line in response.iter_lines():
             if not line:

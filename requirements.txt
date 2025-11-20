@@ -1,5 +1,7 @@
 ### for making http requests 
 requests
+## Python liniter for static code analysis
+ruff
 
 ### Accessing environemnt variables
 python-dotenv

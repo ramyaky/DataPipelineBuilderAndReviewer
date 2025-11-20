@@ -1,0 +1,10 @@
+[project]
+name = "spark-code-generator"
+version = "0.1.0"
+description = "A module for generating PySpark code using Ollama"
+authors = [
+    {name = "Ramya"}
+]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = ["requests"]
